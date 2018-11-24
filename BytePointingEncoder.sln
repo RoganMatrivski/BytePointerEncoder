@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2050
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestPointerCodeByte", "TestPointerCodeByte\TestPointerCodeByte.csproj", "{7F81D543-832B-4E6C-AA50-CFBDC53C5418}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BytePointingEncoder", "TestPointerCodeByte\BytePointingEncoder.csproj", "{7F81D543-832B-4E6C-AA50-CFBDC53C5418}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
