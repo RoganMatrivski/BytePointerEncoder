@@ -20,12 +20,12 @@ namespace TestPointerCodeByte
             Parser.Default.ParseArguments<encode_option, decode_option>(args).MapResult(
                 (encode_option opts) =>
                 {
-                    Console.WriteLine($"{opts.input_path}, {opts.key_path}, {opts.output_path}");
+                    encode(opts.input_path, opts.key_path, opts.output_path);
                     return 1;
                 },
                 (decode_option opts) =>
                 {
-                    Console.WriteLine($"{opts.input_path}, {opts.key_path}, {opts.output_path}");
+                    decode(opts.input_path, opts.key_path, opts.output_path);
 
                     return 1;
                 },
@@ -46,9 +46,7 @@ namespace TestPointerCodeByte
 
             for (int j = 0; j < dataset.Length; j++)
             {
-                //List<long> pos = new List<long>();
                 ConcurrentBag<long> pos = new ConcurrentBag<long>();
-                //for (long i = 0; i < bytes.Length; i++)
                 Parallel.For(0, ref_bytes.Length, (i) =>
                 {
                     if (ref_bytes[i] == dataset[j])
@@ -57,7 +55,6 @@ namespace TestPointerCodeByte
 
                 if (pos.Count > 0)
                 {
-                    //positions.Add(pos.ToArray());
                     positions[j] = pos.ToArray();
 
                     continue;
@@ -75,7 +72,6 @@ namespace TestPointerCodeByte
                 writer.WriteLine(ref_hash);
                 foreach (var ibytes in src_bytes)
                 {
-                    //var pos = positions[ibytes][rand.Next(positions[ibytes].Length)];
                     var pos = long_to_hex(positions[ibytes][rand.Next(positions[ibytes].Length)]);
                     writer.Write(int_to_hex(pos.Length) + pos);
                 }
@@ -107,9 +103,7 @@ namespace TestPointerCodeByte
 
                     char[] hex = new char[charcount];
                     for (int j = 0; j < charcount; j++)
-                    {
                         hex[j] = (char)reader.Read();
-                    }
 
                     long pointer = hex_to_long(new string(hex));
                     container.Add(ref_bytes[pointer]);
