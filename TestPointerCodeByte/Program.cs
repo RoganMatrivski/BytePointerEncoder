@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.IO;
 
 using CommandLine;
+using ShellProgressBar;
 
 namespace TestPointerCodeByte
 {
@@ -35,14 +36,22 @@ namespace TestPointerCodeByte
 
         static void encode(string input_path, string key_path, string output_path)
         {
+            var progress_bar = new ProgressBar(5, "Initializing", options);
+
+            progress_bar.Tick("Loading key file...");
+
             var ref_bytes = File.ReadAllBytes(key_path);
             string ref_hash = get_hash(ref_bytes);
+
+            progress_bar.Tick("Checking if key can be used...");
 
             byte[] dataset = new byte[256];
             for (int i = 0; i < dataset.Length; i++)
                 dataset[i] = Convert.ToByte(i);
 
             long[][] positions = new long[256][];
+
+            var child_progress_bar = progress_bar.Spawn(256, "Initializing...", childOptions);
 
             for (int j = 0; j < dataset.Length; j++)
             {
@@ -56,16 +65,23 @@ namespace TestPointerCodeByte
                 if (pos.Count > 0)
                 {
                     positions[j] = pos.ToArray();
+                    child_progress_bar.Tick($"Byte {j}");
 
                     continue;
                 }
 
-                break;
+                throw new Exception("This key file can't be used! Please use another key file.");
             }
+
+            child_progress_bar.Dispose();
+
+            progress_bar.Tick("Loading input file...");
 
             var src_bytes = File.ReadAllBytes(input_path);
 
-            Random rand = new Random(1337);
+            progress_bar.Tick("Encoding file...");
+
+            Random rand = new Random();
 
             using (StreamWriter writer = new StreamWriter(output_path, false, Encoding.UTF8))
             {
@@ -76,19 +92,33 @@ namespace TestPointerCodeByte
                     writer.Write(int_to_hex(pos.Length) + pos);
                 }
             }
+
+            progress_bar.Tick("Done!");
+
+            progress_bar.Dispose();
         }
 
         static void decode(string input_path, string key_path, string output_path)
         {
-            var ref_bytes = File.ReadAllBytes(key_path);
+            var progress_bar = new ProgressBar(4, "Initializing", options);
+
+            progress_bar.Tick("Loading key file...");
+
+            var ref_bytes = File.ReadAllBytes(key_path); // Step1
+
+            progress_bar.Tick("Reading Encoded file...");
 
             List<byte> container = new List<byte>();
-            using (StreamReader reader = new StreamReader(input_path, Encoding.UTF8))
+            using (var child_progress_bar = progress_bar.Spawn(2, "Initializing", childOptions))
+            using (StreamReader reader = new StreamReader(input_path, Encoding.UTF8)) // Step2
             {
-                if (reader.ReadLine() != get_hash(ref_bytes))
+                child_progress_bar.Tick("Checking if key file hash signature is the same from the encoded file...");
+                if (reader.ReadLine() != get_hash(ref_bytes)) //Step2.1
                     throw new Exception("Hash not the same");
 
-                while (!reader.EndOfStream)
+                // TODO : Revising this code to save the byte while decoding
+                child_progress_bar.Tick("Decoding file...");
+                while (!reader.EndOfStream) //Step2.2 - end
                 {
                     int charcount = 0;
                     char char_read = (char)reader.Read();
@@ -110,7 +140,12 @@ namespace TestPointerCodeByte
                 }
             }
 
-            File.WriteAllBytes(output_path, container.ToArray());
+            progress_bar.Tick("Writing decoded file...");
+
+            File.WriteAllBytes(output_path, container.ToArray()); // Step3
+
+            progress_bar.Tick("Done!");
+            progress_bar.Dispose();
         }
 
         static string get_hash(byte[] data)
@@ -167,5 +202,19 @@ namespace TestPointerCodeByte
             [Option('o', "output", Required = false, HelpText = "File output name. Will be named as [filename]_result.[ext] if left blank")]
             public string output_path { get; set; }
         }
+
+        static ProgressBarOptions options = new ProgressBarOptions
+        {
+            ForegroundColor = ConsoleColor.Yellow,
+            BackgroundColor = ConsoleColor.DarkGray,
+            ProgressCharacter = '-'
+        };
+
+        static ProgressBarOptions childOptions = new ProgressBarOptions
+        {
+            ForegroundColor = ConsoleColor.Green,
+            BackgroundColor = ConsoleColor.DarkGray,
+            ProgressCharacter = '─'
+        };
     }
 }
