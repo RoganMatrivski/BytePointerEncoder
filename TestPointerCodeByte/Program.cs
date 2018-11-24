@@ -21,12 +21,30 @@ namespace TestPointerCodeByte
             Parser.Default.ParseArguments<encode_option, decode_option>(args).MapResult(
                 (encode_option opts) =>
                 {
-                    encode(opts.input_path, opts.key_path, opts.output_path);
+                    string output = opts.output_path;
+
+                    if (output == null)
+                    {
+                        var fileinfo = new FileInfo(opts.input_path);
+
+                        output = $"{Path.GetFileNameWithoutExtension(fileinfo.Name)}_result{fileinfo.Extension}";
+                    }
+
+                    encode(opts.input_path, opts.key_path, output);
                     return 1;
                 },
                 (decode_option opts) =>
                 {
-                    decode(opts.input_path, opts.key_path, opts.output_path);
+                    string output = opts.output_path;
+
+                    if (output == null)
+                    {
+                        var fileinfo = new FileInfo(opts.input_path);
+
+                        output = $"{Path.GetFileNameWithoutExtension(fileinfo.Name)}_result{fileinfo.Extension}";
+                    }
+
+                    decode(opts.input_path, opts.key_path, output);
 
                     return 1;
                 },
@@ -70,7 +88,8 @@ namespace TestPointerCodeByte
                     continue;
                 }
 
-                throw new Exception("This key file can't be used! Please use another key file.");
+                Console.Error.WriteLine("This key file can't be used! Please use another key file.");
+                Environment.Exit(1);
             }
 
             child_progress_bar.Dispose();
@@ -114,7 +133,11 @@ namespace TestPointerCodeByte
             {
                 child_progress_bar.Tick("Checking if key file hash signature is the same from the encoded file...");
                 if (reader.ReadLine() != get_hash(ref_bytes)) //Step2.1
-                    throw new Exception("Hash not the same");
+                {
+                    progress_bar.Dispose();
+                    Console.Error.WriteLine("The hash from the key and from the encoded file is not the same!");
+                    Environment.Exit(1);
+                }
 
                 // TODO : Revising this code to save the byte while decoding
                 child_progress_bar.Tick("Decoding file...");
@@ -128,7 +151,7 @@ namespace TestPointerCodeByte
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception("Houston, we get an illegal character on the input file");
+                        Console.Error.WriteLine(ex.Message);
                     }
 
                     char[] hex = new char[charcount];
