@@ -5,12 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
 
 using System.IO;
 
 using CommandLine;
 using ShellProgressBar;
+
+using static Tools;
+using static Configurations;
 
 namespace TestPointerCodeByte
 {
@@ -170,74 +172,5 @@ namespace TestPointerCodeByte
             progress_bar.Tick("Done!");
             progress_bar.Dispose();
         }
-
-        static string get_hash(byte[] data)
-        {
-            string result;
-            using (SHA1CryptoServiceProvider sha = new SHA1CryptoServiceProvider())
-                result = Convert.ToBase64String(sha.ComputeHash(data));
-
-            return result;
-        }
-
-        static string long_to_hex(long src)
-        {
-            return src.ToString("X");
-        }
-
-        static long hex_to_long(string src)
-        {
-            return long.Parse(src, System.Globalization.NumberStyles.HexNumber);
-        }
-
-        static int hex_to_int(string src)
-        {
-            return int.Parse(src, System.Globalization.NumberStyles.HexNumber);
-        }
-
-        static string int_to_hex(long src)
-        {
-            return src.ToString("X");
-        }
-
-        [Verb("encode", HelpText = "Encode a file with another assigned file")]
-        class encode_option
-        {
-            [Option('i', "input", Required = true, HelpText = "File to be encoded")]
-            public string input_path { get; set; }
-
-            [Option('k', "key", Required = true, HelpText = "File that will be used as a key for encoding")]
-            public string key_path { get; set; }
-
-            [Option('o', "output", Required = false, HelpText = "File output name. Will be named as [filename]_result.[ext] if left blank")]
-            public string output_path { get; set; }
-        }
-
-        [Verb("decode", HelpText = "Decode a file with another assigned file")]
-        class decode_option
-        {
-            [Option('i', "input", Required = true, HelpText = "File to be decoded")]
-            public string input_path { get; set; }
-
-            [Option('k', "key", Required = true, HelpText = "File that will be used as a key for decoding")]
-            public string key_path { get; set; }
-
-            [Option('o', "output", Required = false, HelpText = "File output name. Will be named as [filename]_result.[ext] if left blank")]
-            public string output_path { get; set; }
-        }
-
-        static ProgressBarOptions options = new ProgressBarOptions
-        {
-            ForegroundColor = ConsoleColor.Yellow,
-            BackgroundColor = ConsoleColor.DarkGray,
-            ProgressCharacter = '-'
-        };
-
-        static ProgressBarOptions childOptions = new ProgressBarOptions
-        {
-            ForegroundColor = ConsoleColor.Green,
-            BackgroundColor = ConsoleColor.DarkGray,
-            ProgressCharacter = '─'
-        };
     }
 }
