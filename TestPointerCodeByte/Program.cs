@@ -22,7 +22,7 @@ namespace TestPointerCodeByte
     {
         static void Main(string[] args)
         {
-            Parser.Default.ParseArguments<encode_option, decode_option>(args).MapResult(
+            Parser.Default.ParseArguments<encode_option, decode_option, compare_option>(args).MapResult(
                 (encode_option opts) =>
                 {
                     string output = opts.output_path;
@@ -60,6 +60,12 @@ namespace TestPointerCodeByte
                     //    output = Path.GetFileNameWithoutExtension(output);
 
                     decode(opts.input_path, opts.key_path, output, isCompressed);
+
+                    return 1;
+                },
+                (compare_option opts) =>
+                {
+                    compare(opts.a_path, opts.b_path);
 
                     return 1;
                 },
@@ -254,6 +260,29 @@ namespace TestPointerCodeByte
 
             progress_bar.Tick("Done!");
             progress_bar.Dispose();
+        }
+
+        static void compare(string a, string b)
+        {
+            int str_count = a.Length; if (a.Length < b.Length) str_count = b.Length; // Small snippet formatting code.
+
+            string a_hash = get_hash(File.ReadAllBytes(a));
+            string b_hash = get_hash(File.ReadAllBytes(b));
+
+            if (a_hash == b_hash)
+                Console.WriteLine($"{a} and {b} is the same file");
+            else
+                Console.WriteLine($"{a} and {b} is the same file");
+
+            Console.WriteLine();
+
+            Console.WriteLine("Hash results \n");
+            Console.WriteLine($"{a + new string(' ', str_count - a.Length)} : {a_hash}");
+            Console.WriteLine($"{b + new string(' ', str_count - b.Length)} : {b_hash}");
+            //Console.WriteLine($"{a} : {a_hash}");
+            //Console.WriteLine($"{b} : {b_hash}");
+
+            Console.WriteLine("\n");
         }
     }
 }

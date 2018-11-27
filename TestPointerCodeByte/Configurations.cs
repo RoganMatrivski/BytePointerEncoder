@@ -21,6 +21,16 @@ public static class Configurations
         public bool compress_option { get; set; }
     }
 
+    [Verb("compare", HelpText = "Compare two files if they are the same")]
+    public class compare_option
+    {
+        [Value(0)]
+        public string a_path { get; set; }
+
+        [Value(1)]
+        public string b_path { get; set; }
+    }
+
     [Verb("decode", HelpText = "Decode a file with another assigned file")]
     public class decode_option
     {
