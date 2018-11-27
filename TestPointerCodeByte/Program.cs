@@ -11,6 +11,8 @@ using System.IO;
 using CommandLine;
 using ShellProgressBar;
 
+using System.IO.Compression;
+
 using static Tools;
 using static Configurations;
 
@@ -32,21 +34,32 @@ namespace TestPointerCodeByte
                         output = $"{Path.GetFileNameWithoutExtension(fileinfo.Name)}_result{fileinfo.Extension}";
                     }
 
-                    encode(opts.input_path, opts.key_path, output);
+                    //encode(opts.input_path, opts.key_path, output, opts.compress_option);
+                    encode(opts.input_path, opts.key_path, output, true);
                     return 1;
                 },
                 (decode_option opts) =>
                 {
+                    bool isCompressed = false;
+                    if (new FileInfo(opts.input_path).Extension == ".deflate")
+                        isCompressed = true;
+
                     string output = opts.output_path;
 
                     if (output == null)
                     {
                         var fileinfo = new FileInfo(opts.input_path);
 
-                        output = $"{Path.GetFileNameWithoutExtension(fileinfo.Name)}_result{fileinfo.Extension}";
+                        if (isCompressed)
+                            output = $"{Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(fileinfo.Name))}_result{new FileInfo(Path.GetFileNameWithoutExtension(fileinfo.Name)).Extension}";
+                        else
+                            output = $"{Path.GetFileNameWithoutExtension(fileinfo.Name)}_result{fileinfo.Extension}";
                     }
 
-                    decode(opts.input_path, opts.key_path, output);
+                    //if (isCompressed)
+                    //    output = Path.GetFileNameWithoutExtension(output);
+
+                    decode(opts.input_path, opts.key_path, output, isCompressed);
 
                     return 1;
                 },
@@ -54,7 +67,7 @@ namespace TestPointerCodeByte
                 );
         }
 
-        static void encode(string input_path, string key_path, string output_path)
+        static void encode(string input_path, string key_path, string output_path, bool compress_option)
         {
             var progress_bar = new ProgressBar(5, "Initializing", options);
 
@@ -104,22 +117,83 @@ namespace TestPointerCodeByte
 
             Random rand = new Random();
 
-            using (StreamWriter writer = new StreamWriter(output_path, false, Encoding.UTF8))
+            //using (MemoryStream mem_stream = new MemoryStream())
+            //using (StreamWriter mem_writer = new StreamWriter(mem_stream, Encoding.UTF8))
+            //{
+            //    mem_writer.WriteLine(ref_hash);
+            //    foreach (var ibytes in src_bytes)
+            //    {
+            //        var pos = long_to_hex(positions[ibytes][rand.Next(positions[ibytes].Length)]);
+            //        mem_writer.Write(int_to_hex(pos.Length) + pos);
+            //    }
+
+            //    debug_read = compress(mem_stream.ToArray());
+            //}
+
+            //using (MemoryStream mem_stream = new MemoryStream())
+            //using (StreamWriter mem_writer = new StreamWriter(mem_stream, Encoding.UTF8))
+            //using (GZipStream gzip = new GZipStream(new FileStream(output_path, FileMode.Create), CompressionLevel.Optimal))
+            //{
+            //    mem_writer.WriteLine(ref_hash);
+            //    foreach (var ibytes in src_bytes)
+            //    {
+            //        var pos = long_to_hex(positions[ibytes][rand.Next(positions[ibytes].Length)]);
+            //        mem_writer.Write(int_to_hex(pos.Length) + pos);
+            //    }
+
+            //    debug_read = compress(mem_stream.ToArray());
+            //}
+
+            if (compress_option)
             {
-                writer.WriteLine(ref_hash);
-                foreach (var ibytes in src_bytes)
+                using (MemoryStream mem_stream = new MemoryStream())
+                //using (StreamWriter mem_writer = new StreamWriter(mem_stream, Encoding.UTF8))
+                //using (GZipStream gzip = new GZipStream(new FileStream(output_path, FileMode.Create), CompressionLevel.Optimal))
+                //using (DeflateStream deflate = new DeflateStream(new FileStream(output_path, FileMode.Create), CompressionLevel.Optimal))
+                using (var writer =
+                    new StreamWriter(
+                        new DeflateStream(
+                            new FileStream(output_path + ".deflate", FileMode.Create),
+                        CompressionLevel.Optimal),
+                    Encoding.UTF8))
                 {
-                    var pos = long_to_hex(positions[ibytes][rand.Next(positions[ibytes].Length)]);
-                    writer.Write(int_to_hex(pos.Length) + pos);
+                    writer.WriteLine(ref_hash);
+                    foreach (var ibytes in src_bytes)
+                    {
+                        var pos = long_to_hex(positions[ibytes][rand.Next(positions[ibytes].Length)]);
+                        writer.Write(int_to_hex(pos.Length) + pos);
+                    }
                 }
             }
+            else
+            {
+                using (StreamWriter writer = new StreamWriter(output_path, false, Encoding.UTF8))
+                {
+                    writer.WriteLine(ref_hash);
+                    foreach (var ibytes in src_bytes)
+                    {
+                        var pos = long_to_hex(positions[ibytes][rand.Next(positions[ibytes].Length)]);
+                        writer.Write(int_to_hex(pos.Length) + pos);
+                    }
+                }
+            }
+
+            //using (var reader = new StreamReader(new DeflateStream(new FileStream(output_path, FileMode.Open), CompressionMode.Decompress), Encoding.UTF8))
+            //{
+            //    Console.WriteLine(reader.ReadToEnd());
+            //}
+
+            //using (StreamReader reader = new StreamReader(new MemoryStream(decompress(debug_read))))
+            //{
+            //    Console.WriteLine(reader.ReadLine());
+            //}
 
             progress_bar.Tick("Done!");
 
             progress_bar.Dispose();
         }
 
-        static void decode(string input_path, string key_path, string output_path)
+        static void decode(string input_path, string key_path, string output_path, bool isCompressed)
         {
             var progress_bar = new ProgressBar(4, "Initializing", options);
 
@@ -130,8 +204,15 @@ namespace TestPointerCodeByte
             progress_bar.Tick("Reading Encoded file...");
 
             List<byte> container = new List<byte>();
+            StreamReader reader; // Any way to simplify this?
+
+            if (isCompressed)
+                reader = new StreamReader(new DeflateStream(new FileStream(input_path, FileMode.Open), CompressionMode.Decompress), Encoding.UTF8);
+            else
+                reader = new StreamReader(input_path, Encoding.UTF8);
+
             using (var child_progress_bar = progress_bar.Spawn(2, "Initializing", childOptions))
-            using (StreamReader reader = new StreamReader(input_path, Encoding.UTF8)) // Step2
+            //using (StreamReader reader = new StreamReader(input_path, Encoding.UTF8)) // Step2
             {
                 child_progress_bar.Tick("Checking if key file hash signature is the same from the encoded file...");
                 if (reader.ReadLine() != get_hash(ref_bytes)) //Step2.1
@@ -164,6 +245,8 @@ namespace TestPointerCodeByte
                     container.Add(ref_bytes[pointer]);
                 }
             }
+            reader.Close();
+            reader.Dispose();
 
             progress_bar.Tick("Writing decoded file...");
 

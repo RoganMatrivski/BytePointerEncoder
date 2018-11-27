@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Runtime;
+
+using System.IO.Compression;
+using System.IO;
 
 public static class Tools
 {
@@ -29,5 +33,62 @@ public static class Tools
     public static string int_to_hex(long src)
     {
         return src.ToString("X");
+    }
+
+    static public byte[] trim(byte[] packet)
+    {
+        var i = packet.Length - 1;
+        while (packet[i] == 0)
+        {
+            --i;
+        }
+        var temp = new byte[i + 1];
+        Array.Copy(packet, temp, i + 1);
+        return temp;
+    }
+
+    static public byte[] compress(byte[] data)
+    {
+        using (MemoryStream memstream = new MemoryStream())
+        using (MemoryStream srcstream = new MemoryStream(data))
+        using (DeflateStream deflate = new DeflateStream(memstream, CompressionLevel.Optimal))
+        {
+            srcstream.CopyTo(deflate);
+
+            deflate.Close();
+            return memstream.ToArray();
+        }
+    }
+
+    static public void compress_to_file(byte[] data, string path)
+    {
+        using (FileStream deststream = new FileStream(path, FileMode.Create))
+        using (MemoryStream srcstream = new MemoryStream(data))
+        using (DeflateStream deflate = new DeflateStream(deststream, CompressionLevel.Optimal))
+        {
+            srcstream.CopyTo(deflate);
+        }
+    }
+
+    static public byte[] decompress(byte[] data)
+    {
+        using (MemoryStream memstream = new MemoryStream())
+        using (MemoryStream srcstream = new MemoryStream(data))
+        using (DeflateStream inflate = new DeflateStream(srcstream, CompressionMode.Decompress))
+        {
+            inflate.CopyTo(memstream);
+            inflate.Close();
+            return memstream.ToArray();
+        }
+    }
+
+    static public void decompress_from_file(byte[] data, string path)
+    {
+        using (MemoryStream deststream = new MemoryStream())
+        using (FileStream srcstream = new FileStream(path, FileMode.Open))
+        using (DeflateStream inflate = new DeflateStream(srcstream, CompressionMode.Decompress))
+        {
+            inflate.CopyTo(deststream);
+        }
     }
 }

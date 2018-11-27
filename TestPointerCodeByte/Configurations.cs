@@ -16,6 +16,9 @@ public static class Configurations
 
         [Option('o', "output", Required = false, HelpText = "File output name. Will be named as [filename]_result.[ext] if left blank")]
         public string output_path { get; set; }
+
+        [Option('c', "compress", Required = false, HelpText = "Compress the output. Will add .gz at the end of the filename")]
+        public bool compress_option { get; set; }
     }
 
     [Verb("decode", HelpText = "Decode a file with another assigned file")]
