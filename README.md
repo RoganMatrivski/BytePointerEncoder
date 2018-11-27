@@ -1,5 +1,5 @@
 ## BytePointerEncoder
-##### TODO : Change the title to something that makes sense. Idk what this is called.
+##### TODO : Change the title to something that makes sense. Idk what this algorithm is called.
 ---
 ### What is this?
 Simply put, this program encodes your data, paired with a key file as a reference, to an array of hexes.
@@ -19,10 +19,8 @@ Second line, is the array of address, mixed with a single hex number. What is th
 
 ### What packages do you use?
 I use only two packages. Which is 
-* [ShellProgressBar](https://github.com/Mpdreamz/shellprogressbar)
-Displays the progress of your program with the aesthetics of the good ol'progress bar
-* [Command Line Parser](https://github.com/Mpdreamz/shellprogressbar)
-Parsing your command line argument easily.
+* [ShellProgressBar](https://github.com/Mpdreamz/shellprogressbar) - Displays the progress of your program with the aesthetics of the good ol'progress bar
+* [Command Line Parser](https://github.com/Mpdreamz/shellprogressbar) - Parsing your command line argument easily.
 
 Both of them uses [MIT License](https://opensource.org/licenses/MIT), so definitely check it out. It's great.
 
