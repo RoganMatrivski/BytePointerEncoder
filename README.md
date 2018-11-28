@@ -5,7 +5,7 @@
 Simply put, this program encodes your data, paired with a key file as a reference, to an array of hexes.
 
 ### Wait, what?
-Look. I don't know what algorithm is this called. The only thing i know, is this thing is loading the file, load a key file as a reference for encoding the file, and *\*poof*\*, the encoded file is not making sense for any program other than this program, or the program that implements this algorithm.
+Look. I don't know what algorithm is this called. The only thing i know, is this thing is loading the file, load a key file as a reference for encoding the file, and \**poof*\*, the encoded file is not making sense for any program other than this program, or the program that implements this algorithm.
 
 ### What's the algorithm then?
 Do you know that game where you given an array of number and a text for reference, and you figure out that the number addresses to a word/letter somewhere on that text that you've given? This software does the same, although the word/letter is replaced with bytes. 
@@ -27,4 +27,4 @@ Both of them uses [MIT License](https://opensource.org/licenses/MIT), so definit
 ### Why use C#? 
 Coz i'm suck at C++, and i'm scared on looking at it.
 
-*\*shudders\**
+\**shudders\**
